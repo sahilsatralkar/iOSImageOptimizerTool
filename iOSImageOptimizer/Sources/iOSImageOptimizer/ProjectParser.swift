@@ -46,7 +46,7 @@ class ProjectParser {
         
         // Find .xcodeproj directories
         let folder = try Folder(path: projectPath)
-        for subfolder in folder.subfolders.recursive {
+        for subfolder in folder.filteredRecursiveSubfolders {
             if subfolder.name.hasSuffix(".xcodeproj") {
                 let pbxprojPath = "\(subfolder.path)/project.pbxproj"
                 if let file = try? File(path: pbxprojPath) {
@@ -116,7 +116,7 @@ class ProjectParser {
         var assets: [AssetInfo] = []
         
         let folder = try Folder(path: projectPath)
-        for subfolder in folder.subfolders.recursive {
+        for subfolder in folder.filteredRecursiveSubfolders {
             if subfolder.name.hasSuffix(".xcassets") {
                 assets.append(contentsOf: try parseAssetCatalog(subfolder))
             }
@@ -128,7 +128,7 @@ class ProjectParser {
     private func parseAssetCatalog(_ catalog: Folder) throws -> [AssetInfo] {
         var assets: [AssetInfo] = []
         
-        for imageSet in catalog.subfolders.recursive {
+        for imageSet in catalog.filteredRecursiveSubfolders {
             if imageSet.name.hasSuffix(".imageset") {
                 if let asset = try parseImageSet(imageSet) {
                     assets.append(asset)
@@ -181,7 +181,7 @@ class ProjectParser {
         var imageReferences = Set<String>()
         
         let folder = try Folder(path: projectPath)
-        for file in folder.files.recursive where file.name == "Info.plist" {
+        for file in folder.filteredRecursiveFiles where file.name == "Info.plist" {
             do {
                 let content = try file.readAsString()
                 imageReferences.formUnion(parseInfoPlistContent(content))
@@ -234,7 +234,7 @@ class ProjectParser {
         var imageReferences = Set<String>()
         
         let folder = try Folder(path: projectPath)
-        for file in folder.files.recursive where file.extension == "strings" {
+        for file in folder.filteredRecursiveFiles where file.extension == "strings" {
             do {
                 let content = try file.readAsString()
                 imageReferences.formUnion(parseStringsFileContent(content))
@@ -283,9 +283,9 @@ class ProjectParser {
         var imageReferences = Set<String>()
         
         let folder = try Folder(path: projectPath)
-        for subfolder in folder.subfolders.recursive where subfolder.name.hasSuffix(".bundle") {
+        for subfolder in folder.filteredRecursiveSubfolders where subfolder.name.hasSuffix(".bundle") {
             // Parse plist files in bundle
-            for file in subfolder.files.recursive where file.extension == "plist" {
+            for file in subfolder.filteredRecursiveFiles where file.extension == "plist" {
                 do {
                     let content = try file.readAsString()
                     imageReferences.formUnion(parseInfoPlistContent(content))
@@ -299,7 +299,7 @@ class ProjectParser {
             }
             
             // Parse strings files in bundle
-            for file in subfolder.files.recursive where file.extension == "strings" {
+            for file in subfolder.filteredRecursiveFiles where file.extension == "strings" {
                 do {
                     let content = try file.readAsString()
                     imageReferences.formUnion(parseStringsFileContent(content))
@@ -313,7 +313,7 @@ class ProjectParser {
             }
             
             // Parse image files in bundle
-            for file in subfolder.files.recursive {
+            for file in subfolder.filteredRecursiveFiles {
                 if let ext = file.extension, isImageExtension(ext) {
                     imageReferences.insert(file.nameExcludingExtension)
                 }

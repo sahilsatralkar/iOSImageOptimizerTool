@@ -22,6 +22,21 @@ struct ImageAsset: Encodable {
 class ImageScanner {
     private let projectPath: String
     
+    // Directories to exclude from scanning
+    private let excludedDirectories = [
+        "DerivedData",
+        "Pods",
+        ".build",
+        "Carthage",
+        "node_modules",
+        ".git",
+        "build",
+        "Build",
+        "xcuserdata",
+        ".swiftpm",
+        "SourcePackages"
+    ]
+    
     init(projectPath: String) {
         self.projectPath = projectPath
     }
@@ -40,14 +55,24 @@ class ImageScanner {
         return images
     }
     
+    private func shouldExcludeDirectory(_ path: String) -> Bool {
+        for excluded in excludedDirectories {
+            if path.contains("/\(excluded)/") || path.hasSuffix("/\(excluded)") {
+                return true
+            }
+        }
+        return false
+    }
+    
     private func scanStandaloneImages(in folder: Folder) throws -> [ImageAsset] {
         var images: [ImageAsset] = []
         
-        for file in folder.files.recursive {
-            guard let imageType = imageType(for: file.extension ?? "") else { continue }
+        // Use custom recursive traversal to properly skip excluded directories
+        try scanFolderRecursively(folder) { file in
+            guard let imageType = imageType(for: file.extension ?? "") else { return }
             
             // Skip images in .xcassets
-            if file.path.contains(".xcassets") { continue }
+            if file.path.contains(".xcassets") { return }
             
             let metadata = getImageMetadata(at: file.path, type: imageType)
             let asset = ImageAsset(
@@ -66,10 +91,27 @@ class ImageScanner {
         return images
     }
     
+    private func scanFolderRecursively(_ folder: Folder, fileHandler: (File) throws -> Void) throws {
+        // Process files in current folder
+        for file in folder.files {
+            try fileHandler(file)
+        }
+        
+        // Recursively process subfolders, skipping excluded ones
+        for subfolder in folder.subfolders {
+            // Skip excluded directories
+            if excludedDirectories.contains(subfolder.name) {
+                continue
+            }
+            
+            try scanFolderRecursively(subfolder, fileHandler: fileHandler)
+        }
+    }
+    
     private func scanAssetCatalogs(in folder: Folder) throws -> [ImageAsset] {
         var images: [ImageAsset] = []
         
-        for subfolder in folder.subfolders.recursive {
+        try scanFoldersRecursively(folder) { subfolder in
             if subfolder.name.hasSuffix(".xcassets") {
                 images.append(contentsOf: try scanAssetCatalog(subfolder))
             }
@@ -78,10 +120,25 @@ class ImageScanner {
         return images
     }
     
+    private func scanFoldersRecursively(_ folder: Folder, folderHandler: (Folder) throws -> Void) throws {
+        // Process current folder
+        try folderHandler(folder)
+        
+        // Recursively process subfolders, skipping excluded ones
+        for subfolder in folder.subfolders {
+            // Skip excluded directories
+            if excludedDirectories.contains(subfolder.name) {
+                continue
+            }
+            
+            try scanFoldersRecursively(subfolder, folderHandler: folderHandler)
+        }
+    }
+    
     private func scanAssetCatalog(_ catalog: Folder) throws -> [ImageAsset] {
         var images: [ImageAsset] = []
         
-        for imageSet in catalog.subfolders.recursive {
+        for imageSet in catalog.filteredRecursiveSubfolders {
             if imageSet.name.hasSuffix(".imageset") {
                 let assetName = imageSet.name.replacingOccurrences(of: ".imageset", with: "")
                 
@@ -210,7 +267,7 @@ class ImageScanner {
     private func scanAssetCatalogsEnhanced(in folder: Folder) throws -> [ImageAsset] {
         var images: [ImageAsset] = []
         
-        for subfolder in folder.subfolders.recursive {
+        try scanFoldersRecursively(folder) { subfolder in
             if subfolder.name.hasSuffix(".xcassets") {
                 let projectParser = ProjectParser(projectPath: projectPath)
                 let assetInfos = try projectParser.parseAssetCatalogs()

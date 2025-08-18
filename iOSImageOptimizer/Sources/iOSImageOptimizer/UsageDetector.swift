@@ -27,7 +27,7 @@ class UsageDetector {
         }
         
         // Scan Swift files
-        for file in folder.files.recursive where file.extension == "swift" {
+        for file in folder.filteredRecursiveFiles where file.extension == "swift" {
             do {
                 let content = try file.readAsString()
                 usedImages.formUnion(findImageReferences(in: content, fileType: .swift))
@@ -40,7 +40,7 @@ class UsageDetector {
         }
         
         // Scan Objective-C implementation files
-        for file in folder.files.recursive where file.extension == "m" || file.extension == "mm" {
+        for file in folder.filteredRecursiveFiles where file.extension == "m" || file.extension == "mm" {
             do {
                 let content = try file.readAsString()
                 usedImages.formUnion(findImageReferences(in: content, fileType: .objectiveC))
@@ -53,7 +53,7 @@ class UsageDetector {
         }
         
         // Scan Objective-C header files
-        for file in folder.files.recursive where file.extension == "h" {
+        for file in folder.filteredRecursiveFiles where file.extension == "h" {
             do {
                 let content = try file.readAsString()
                 usedImages.formUnion(findImageReferences(in: content, fileType: .objectiveC))
@@ -66,7 +66,7 @@ class UsageDetector {
         }
         
         // Scan Storyboards and XIBs
-        for file in folder.files.recursive where file.extension == "storyboard" || file.extension == "xib" {
+        for file in folder.filteredRecursiveFiles where file.extension == "storyboard" || file.extension == "xib" {
             do {
                 let content = try file.readAsString()
                 usedImages.formUnion(findImageReferences(in: content, fileType: .interfaceBuilder))
@@ -178,7 +178,7 @@ class UsageDetector {
     private func findStringConstants(in folder: Folder) throws -> Set<String> {
         var constants = Set<String>()
         
-        for file in folder.files.recursive where file.extension == "swift" {
+        for file in folder.filteredRecursiveFiles where file.extension == "swift" {
             do {
                 let content = try file.readAsString()
                 
@@ -267,7 +267,7 @@ class UsageDetector {
     private func detectRuntimeImagePatterns(in folder: Folder) throws -> [RuntimePattern] {
         var patterns: [RuntimePattern] = []
         
-        for file in folder.files.recursive where file.extension == "swift" || file.extension == "m" || file.extension == "mm" {
+        for file in folder.filteredRecursiveFiles where file.extension == "swift" || file.extension == "m" || file.extension == "mm" {
             do {
                 let content = try file.readAsString()
                 patterns.append(contentsOf: findRuntimePatterns(in: content, fileName: file.name))
@@ -335,7 +335,7 @@ class UsageDetector {
         var interpolationPatterns: [String] = []
         var variableAssignments: [String: [String]] = [:]
         
-        for file in folder.files.recursive where file.extension == "swift" {
+        for file in folder.filteredRecursiveFiles where file.extension == "swift" {
             do {
                 let content = try file.readAsString()
                 

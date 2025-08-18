@@ -50,7 +50,7 @@ class SemanticAnalyzer {
     private func findVariableAssignments(in folder: Folder) throws -> [VariableAssignment] {
         var assignments: [VariableAssignment] = []
         
-        for file in folder.files.recursive where file.extension == "swift" {
+        for file in folder.filteredRecursiveFiles where file.extension == "swift" {
             do {
                 let content = try file.readAsString()
                 assignments.append(contentsOf: parseVariableAssignments(in: content))
@@ -124,7 +124,7 @@ class SemanticAnalyzer {
     private func findStringInterpolations(in folder: Folder) throws -> [StringInterpolation] {
         var interpolations: [StringInterpolation] = []
         
-        for file in folder.files.recursive where file.extension == "swift" {
+        for file in folder.filteredRecursiveFiles where file.extension == "swift" {
             do {
                 let content = try file.readAsString()
                 interpolations.append(contentsOf: parseStringInterpolations(in: content))

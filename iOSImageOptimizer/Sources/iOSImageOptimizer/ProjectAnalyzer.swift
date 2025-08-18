@@ -320,7 +320,7 @@ class ProjectAnalyzer {
         // Additional safety check - look for the image name as a plain string anywhere in project files
         do {
             let folder = try Folder(path: projectPath)
-            for file in folder.files.recursive {
+            for file in folder.filteredRecursiveFiles {
                 if let ext = file.extension,
                    ["swift", "m", "mm", "h", "storyboard", "xib", "plist", "strings"].contains(ext) {
                     let content = try file.readAsString()
