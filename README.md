@@ -322,7 +322,13 @@ Point the tool to the root project folder containing the `.xcodeproj` file.
 
 ## 📋 Version History
 
-### v0.2 (Latest)
+### v0.3 (Latest)
+- ✅ **Build Fix**: Resolved critical build issues when cloning repository (Fixes #3)
+- ✅ **Clean Repository**: Removed machine-specific build artifacts from version control
+- ✅ **Improved Developer Experience**: Project now builds successfully on all machines without errors
+- ✅ **Better .gitignore**: Ensures build artifacts stay local and don't get committed
+
+### v0.2
 - ✅ **Complete Test Suite**: 154 comprehensive unit tests with 73.8% code coverage
 - ✅ **CI/CD Pipeline**: Automated testing on GitHub Actions
 - ✅ **Enhanced Detection**: Improved dynamic image loading detection with Method 2
