@@ -1,4 +1,0 @@
-module Files {
-    header "/Users/sahilsatralkar/Documents/GitHub/iOSImageOptimizer/iOSImageOptimizer/.build/x86_64-apple-macosx/debug/Files.build/Files-Swift.h"
-    requires objc
-}

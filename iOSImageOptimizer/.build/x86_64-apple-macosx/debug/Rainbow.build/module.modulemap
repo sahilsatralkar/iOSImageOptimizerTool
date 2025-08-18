@@ -1,4 +1,0 @@
-module Rainbow {
-    header "/Users/sahilsatralkar/Documents/GitHub/iOSImageOptimizer/iOSImageOptimizer/.build/x86_64-apple-macosx/debug/Rainbow.build/Rainbow-Swift.h"
-    requires objc
-}
