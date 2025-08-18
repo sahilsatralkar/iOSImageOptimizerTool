@@ -322,7 +322,13 @@ Point the tool to the root project folder containing the `.xcodeproj` file.
 
 ## 📋 Version History
 
-### v0.3 (Latest)
+### v0.4 (Latest)
+- ✅ **Critical Performance Fix**: Tool no longer hangs on real-world iOS projects
+- ✅ **Smart Directory Exclusion**: Automatically skips DerivedData, Pods, .build, Carthage, and other build directories
+- ✅ **Massive Speed Improvement**: Completes in seconds instead of hanging indefinitely
+- ✅ **Production Ready**: Successfully tested on complex projects with large dependency folders
+
+### v0.3
 - ✅ **Build Fix**: Resolved critical build issues when cloning repository (Fixes #3)
 - ✅ **Clean Repository**: Removed machine-specific build artifacts from version control
 - ✅ **Improved Developer Experience**: Project now builds successfully on all machines without errors
