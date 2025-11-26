@@ -7,7 +7,7 @@ A comprehensive command-line tool that analyzes your iOS projects for image opti
 This tool provides **comprehensive image analysis** for iOS projects:
 
 ### ✅ Core Features
-- **Unused Image Detection** - Find images that exist but are never referenced in code, including dynamic loading and compile-time pattern recognition
+- **Unused Image Detection** - Find images that exist but are never referenced in code, including dynamic loading, string interpolation, and array iteration patterns
 - **Apple Compliance Validation** - Validate images against Apple's official guidelines
 - **PNG Interlacing Analysis** - Detect performance-impacting interlaced PNGs
 - **Color Profile Validation** - Ensure consistent colors across devices
@@ -15,6 +15,13 @@ This tool provides **comprehensive image analysis** for iOS projects:
 - **Design Quality Assessment** - Check touch targets and memory optimization
 - **Compliance Scoring** - Get a 0-100 Apple compliance score
 - **Prioritized Recommendations** - Actionable items ranked by importance
+
+### 🔍 Advanced Detection (v0.5)
+- **Alternative App Icons** - Detects icons used with `setAlternateIconName()` from Info.plist
+- **Localized Image Variants** - Groups `image~ja.png`, `image~fr.png` with their base images
+- **Color Set Protection** - Never marks `.colorset` assets as unused (AccentColor, etc.)
+- **Multi-Target Awareness** - Recognizes images in Widgets, Share Extensions, App Clips, and 10+ extension types
+- **Array Pattern Detection** - Detects `.map { UIImage(named: $0) }` and similar iteration patterns
 
 ### 🛡️ Quality Assurance
 - **154 Comprehensive Unit Tests** - Ensuring reliability and accuracy
@@ -292,7 +299,8 @@ The project includes GitHub Actions automation that:
 
 - **Analysis Only**: This tool only analyzes - it never automatically modifies your project
 - **Backup First**: Always backup your project before making changes
-- **Enhanced Detection**: Tool now detects dynamic loading patterns and string interpolation to reduce false positives
+- **Enhanced Detection**: Tool detects dynamic loading patterns, string interpolation, alternative app icons, localized variants, and array iteration patterns to minimize false positives
+- **Multi-Target Support**: Images in Widgets, Extensions, and App Clips are automatically recognized
 - **Test Thoroughly**: Verify your app works correctly after making changes
 - **Apple Guidelines**: This tool follows Apple's official recommendations, not arbitrary limits
 
@@ -322,7 +330,15 @@ Point the tool to the root project folder containing the `.xcodeproj` file.
 
 ## 📋 Version History
 
-### v0.4 (Latest)
+### v0.5 (Latest)
+- ✅ **Alternative App Icons Detection**: Parses `CFBundleAlternateIcons` from Info.plist to detect icons used with `setAlternateIconName()`
+- ✅ **Color Set Protection**: All `.colorset` assets are now protected from being marked as unused (AccentColor, WidgetBackground, etc.)
+- ✅ **Localized Image Support**: Groups locale-suffixed images (`image~ja.png`, `image~zh-Hans.png`) with their base images
+- ✅ **Multi-Target Detection**: Recognizes images in Widgets, Share Extensions, Today Extensions, iMessage, App Clips, and 10+ extension types
+- ✅ **Enhanced Array Pattern Detection**: Detects `.map { UIImage(named: $0) }`, `.forEach`, `.compactMap`, and `for-in` loop patterns
+- ✅ **Reduced False Positives**: Significantly improved accuracy before implementing delete functionality
+
+### v0.4
 - ✅ **Critical Performance Fix**: Tool no longer hangs on real-world iOS projects
 - ✅ **Smart Directory Exclusion**: Automatically skips DerivedData, Pods, .build, Carthage, and other build directories
 - ✅ **Massive Speed Improvement**: Completes in seconds instead of hanging indefinitely
