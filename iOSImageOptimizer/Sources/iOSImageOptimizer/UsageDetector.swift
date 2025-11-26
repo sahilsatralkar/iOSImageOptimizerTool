@@ -327,38 +327,95 @@ class UsageDetector {
     }
     
     // MARK: - Core String Interpolation Detection (Always Enabled)
-    
+
     private func detectInterpolationImageNames(in folder: Folder) throws -> Set<String> {
         var resolvedImages = Set<String>()
-        
+
         // Find all interpolation patterns
         var interpolationPatterns: [String] = []
         var variableAssignments: [String: [String]] = [:]
-        
+        var arrayIterationUsages: [(arrayName: String, fileContent: String)] = []
+
         for file in folder.filteredRecursiveFiles where file.extension == "swift" {
             do {
                 let content = try file.readAsString()
-                
+
                 // Extract variable assignments
                 let assignments = extractVariableAssignments(from: content)
                 for (key, values) in assignments {
                     variableAssignments[key, default: []].append(contentsOf: values)
                 }
-                
+
                 // Extract interpolation patterns
                 interpolationPatterns.append(contentsOf: extractInterpolationPatterns(from: content))
+
+                // Detect array iteration patterns for image loading
+                let arrayUsages = detectArrayIterationImageLoading(from: content)
+                for arrayName in arrayUsages {
+                    arrayIterationUsages.append((arrayName: arrayName, fileContent: content))
+                }
             } catch {
                 continue
             }
         }
-        
+
         // Resolve interpolations with known variables
         for pattern in interpolationPatterns {
             let resolved = resolveInterpolationPattern(pattern, with: variableAssignments)
             resolvedImages.formUnion(resolved)
         }
-        
+
+        // Resolve array iteration patterns
+        for (arrayName, _) in arrayIterationUsages {
+            if let arrayValues = variableAssignments[arrayName] {
+                resolvedImages.formUnion(arrayValues)
+            }
+        }
+
         return resolvedImages
+    }
+
+    /// Detects array iteration patterns that load images dynamically
+    /// e.g., icons.map { UIImage(named: $0) }, icons.forEach { ... UIImage(named: $0) }
+    private func detectArrayIterationImageLoading(from content: String) -> [String] {
+        var arrayNames: [String] = []
+
+        // Patterns to detect array-based image loading
+        let patterns = [
+            // arrayName.map { UIImage(named: $0) }
+            #"(\w+)\.map\s*\{\s*[^}]*(?:UIImage\s*\(\s*named:\s*\$0|Image\s*\(\s*\$0)[^}]*\}"#,
+            // arrayName.forEach { UIImage(named: $0) }
+            #"(\w+)\.forEach\s*\{\s*[^}]*(?:UIImage\s*\(\s*named:\s*\$0|Image\s*\(\s*\$0)[^}]*\}"#,
+            // arrayName.compactMap { UIImage(named: $0) }
+            #"(\w+)\.compactMap\s*\{\s*[^}]*(?:UIImage\s*\(\s*named:\s*\$0|Image\s*\(\s*\$0)[^}]*\}"#,
+            // for item in arrayName { UIImage(named: item) }
+            #"for\s+(\w+)\s+in\s+(\w+)\s*\{[^}]*(?:UIImage\s*\(\s*named:\s*\1|Image\s*\(\s*\1)[^}]*\}"#,
+            // arrayName.map { UIImage(named: $0)! }
+            #"(\w+)\.map\s*\{\s*(?:UIImage\s*\(\s*named:\s*\$0\s*\)|Image\s*\(\s*\$0\s*\))[!?]?\s*\}"#,
+            // arrayName.map { name in UIImage(named: name) }
+            #"(\w+)\.map\s*\{\s*(\w+)\s+in\s+[^}]*(?:UIImage\s*\(\s*named:\s*\2|Image\s*\(\s*\2)[^}]*\}"#,
+            // arrayName.forEach { name in UIImage(named: name) }
+            #"(\w+)\.forEach\s*\{\s*(\w+)\s+in\s+[^}]*(?:UIImage\s*\(\s*named:\s*\2|Image\s*\(\s*\2)[^}]*\}"#
+        ]
+
+        for pattern in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) {
+                let matches = regex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
+
+                for match in matches {
+                    // For 'for in' pattern, the array name is in group 2
+                    let groupIndex = pattern.contains("for\\s+") ? 2 : 1
+
+                    if match.numberOfRanges > groupIndex,
+                       let range = Range(match.range(at: groupIndex), in: content) {
+                        let arrayName = String(content[range])
+                        arrayNames.append(arrayName)
+                    }
+                }
+            }
+        }
+
+        return arrayNames
     }
     
     private func extractVariableAssignments(from content: String) -> [String: [String]] {

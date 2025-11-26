@@ -199,7 +199,7 @@ class ProjectParser {
     
     private func parseInfoPlistContent(_ content: String) -> Set<String> {
         var references = Set<String>()
-        
+
         // App Icon references
         let patterns = [
             #"<key>CFBundleIconName</key>\s*<string>([^<]+)</string>"#,
@@ -208,11 +208,11 @@ class ProjectParser {
             #"<key>UILaunchStoryboardName</key>\s*<string>([^<]+)</string>"#,
             #"<string>([^<]*\.(?:png|jpg|jpeg|gif|svg|pdf))</string>"# // Any image file references
         ]
-        
+
         for pattern in patterns {
             let regex = try? NSRegularExpression(pattern: pattern, options: [])
             let matches = regex?.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content)) ?? []
-            
+
             for match in matches {
                 if let range = Range(match.range(at: 1), in: content) {
                     let reference = String(content[range])
@@ -224,8 +224,94 @@ class ProjectParser {
                 }
             }
         }
-        
+
+        // Parse alternate app icons (CFBundleAlternateIcons)
+        references.formUnion(parseAlternateAppIcons(from: content))
+
         return references
+    }
+
+    // MARK: - Alternate App Icons Parsing
+
+    /// Parses CFBundleAlternateIcons from Info.plist content to detect alternative app icon names
+    /// These icons are set programmatically via UIApplication.setAlternateIconName()
+    private func parseAlternateAppIcons(from content: String) -> Set<String> {
+        var alternateIcons = Set<String>()
+
+        // Pattern to find CFBundleAlternateIcons section and extract icon names
+        // Structure: CFBundleIcons -> CFBundleAlternateIcons -> {IconName} -> CFBundleIconFiles -> [icon names]
+
+        // First, check if CFBundleAlternateIcons exists
+        guard content.contains("CFBundleAlternateIcons") else {
+            return alternateIcons
+        }
+
+        // Extract all strings that appear after CFBundleIconFiles within the alternate icons section
+        // This pattern captures icon file names from the array
+        let iconFilesPattern = #"<key>CFBundleIconFiles</key>\s*<array>\s*((?:<string>[^<]+</string>\s*)+)</array>"#
+
+        if let regex = try? NSRegularExpression(pattern: iconFilesPattern, options: [.dotMatchesLineSeparators]) {
+            let matches = regex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
+
+            for match in matches {
+                if let arrayRange = Range(match.range(at: 1), in: content) {
+                    let arrayContent = String(content[arrayRange])
+
+                    // Extract individual icon names from the array
+                    let stringPattern = #"<string>([^<]+)</string>"#
+                    if let stringRegex = try? NSRegularExpression(pattern: stringPattern, options: []) {
+                        let stringMatches = stringRegex.matches(in: arrayContent, options: [], range: NSRange(arrayContent.startIndex..., in: arrayContent))
+
+                        for stringMatch in stringMatches {
+                            if let nameRange = Range(stringMatch.range(at: 1), in: arrayContent) {
+                                let iconName = String(arrayContent[nameRange])
+                                alternateIcons.insert(iconName)
+
+                                // Also add common variants
+                                alternateIcons.insert("\(iconName)@2x")
+                                alternateIcons.insert("\(iconName)@3x")
+
+                                // Add without extension if it has one
+                                if let nameWithoutExt = iconName.components(separatedBy: ".").first, nameWithoutExt != iconName {
+                                    alternateIcons.insert(nameWithoutExt)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Also extract the alternate icon keys themselves (e.g., "DarkIcon", "LightIcon")
+        // These are sometimes used as the icon name directly
+        let alternateKeyPattern = #"<key>CFBundleAlternateIcons</key>\s*<dict>(.*?)</dict>\s*</dict>"#
+        if let regex = try? NSRegularExpression(pattern: alternateKeyPattern, options: [.dotMatchesLineSeparators]) {
+            let matches = regex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
+
+            for match in matches {
+                if let dictRange = Range(match.range(at: 1), in: content) {
+                    let dictContent = String(content[dictRange])
+
+                    // Extract keys which are the alternate icon identifiers
+                    let keyPattern = #"<key>([^<]+)</key>\s*<dict>"#
+                    if let keyRegex = try? NSRegularExpression(pattern: keyPattern, options: []) {
+                        let keyMatches = keyRegex.matches(in: dictContent, options: [], range: NSRange(dictContent.startIndex..., in: dictContent))
+
+                        for keyMatch in keyMatches {
+                            if let keyRange = Range(keyMatch.range(at: 1), in: dictContent) {
+                                let keyName = String(dictContent[keyRange])
+                                // Skip CFBundleIconFiles as it's not an icon name
+                                if keyName != "CFBundleIconFiles" && keyName != "UIPrerenderedIcon" {
+                                    alternateIcons.insert(keyName)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return alternateIcons
     }
     
     // MARK: - Strings File Parsing
