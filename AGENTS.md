@@ -54,5 +54,5 @@ swift run iOSImageOptimizer /path/to/project --json
 - Fixtures are copied as test resources by `Package.swift`. Reuse existing test utilities and mock-image helpers; keep intentional corrupted fixtures intact.
 - Documentation-only changes need a diff/whitespace check, not a build.
 - Report actual verification results and any blockers. Do not repeat the historical test count or coverage percentage in README/CLAUDE guidance as a current measured result.
-- CI is defined in `.github/workflows/ci.yml`. It builds and tests from the package directory and currently selects a hardcoded Xcode 15.0 path; inspect runner availability if CI setup fails.
+- Verification is performed locally; this repository has no CI workflow. Run the applicable commands above before committing and report their results.
 - Do not commit build output, coverage output, `.DS_Store`, editor/user data, secrets, or machine-specific paths. `Package.resolved` is currently ignored by repository policy.

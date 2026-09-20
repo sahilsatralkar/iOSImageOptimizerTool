@@ -18,7 +18,7 @@ This tool provides **comprehensive image analysis** for iOS projects:
 
 ### 🛡️ Quality Assurance
 - **154 Comprehensive Unit Tests** - Ensuring reliability and accuracy
-- **CI/CD Pipeline** - Automated testing on every Pull Request
+- **Local Verification** - Build and run tests locally before submitting code changes
 - **73.8% Code Coverage** - Extensive test coverage across all components
 - **Cross-Platform Support** - Works on both Intel and Apple Silicon Macs
 
@@ -203,14 +203,17 @@ pwd  # Shows current directory
 
 ### Regular Analysis
 - Run before each App Store submission
-- Include in CI/CD pipeline for continuous monitoring
+- Run locally after image or image-reference changes
 - Check after adding new images or design updates
 
 ## 🧪 Development & Testing
 
 ### Running Tests
+Run these commands from the `iOSImageOptimizer/` package directory:
+
 ```bash
-# Run all 154 unit tests
+# Build and run the test suite locally
+swift build
 swift test
 
 # Run tests with code coverage
@@ -221,20 +224,15 @@ swift test --enable-code-coverage
 xcrun llvm-cov export ./.build/debug/iOSImageOptimizerPackageTests.xctest/Contents/MacOS/iOSImageOptimizerPackageTests -instr-profile=./.build/debug/codecov/default.profdata -format="lcov" > coverage.lcov
 ```
 
-### CI/CD Integration
-The project includes GitHub Actions automation that:
-- Builds the project on every PR
-- Runs all 154 unit tests
-- Generates code coverage reports
-- Supports both x86_64 and Apple Silicon runners
-- Provides detailed test summaries
+### Local Verification
+This repository does not run CI. Before submitting code changes, run `swift build` and `swift test` locally on macOS and include the results in your pull request. For CLI behavior changes, also run the tool against a representative project. Documentation-only changes require a diff/whitespace check (`git diff --check`), not a build. Coverage reports are optional and generated locally.
 
 ### Contributing
 1. Fork the repository
 2. Create a feature branch
 3. Add tests for new functionality
 4. Ensure all tests pass: `swift test`
-5. Submit a Pull Request (CI will automatically run tests)
+5. Submit a Pull Request with your local verification results
 
 ### Image Optimization Workflow
 1. **Design** images at @1x resolution with whole-number dimensions

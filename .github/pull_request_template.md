@@ -31,4 +31,4 @@ Brief description of the changes made in this PR.
 Any additional information, deployment notes, etc.
 
 ---
-**Note**: This PR will automatically trigger CI tests. Please ensure all checks pass before requesting review.
+**Note**: Verification runs locally; there is no CI workflow. Include the commands run and their results before requesting review. Documentation-only changes require `git diff --check`, not a build.

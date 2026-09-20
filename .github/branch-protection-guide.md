@@ -5,9 +5,7 @@
 ### Go to: GitHub Repository → Settings → Branches → Add Rule
 
 **Rule for `main` branch**:
-- ✅ **Require status checks to pass before merging**
-  - ✅ Require branches to be up to date before merging
-  - ✅ Status checks required: `Run Tests`
+- Do not require the retired `Run Tests` status check. Remove it from existing branch protection or rulesets if configured; this repository now verifies changes locally.
 - ✅ **Require pull request reviews before merging**
   - ✅ Required approving reviews: 1 (you)
   - ✅ Dismiss stale reviews when new commits are pushed
@@ -17,7 +15,7 @@
 - ❌ **Allow deletions** (disabled for safety)
 
 ## Result
-- Tests must pass ✅
+- Local build and test results are included in the pull request for code changes ✅
 - YOU must manually approve ✅  
 - YOU control all merges ✅
 - No auto-merge capability ✅

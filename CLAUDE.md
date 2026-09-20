@@ -61,5 +61,6 @@ swift build
 ### Testing
 - 154 comprehensive unit tests covering all major components
 - Test fixtures include mock projects, images, and JSON files
-- CI/CD pipeline runs tests automatically on pull requests
-- Code coverage reporting integrated with GitHub Actions
+- Verification runs locally; there is no CI workflow
+- Run `swift build` and `swift test` from the package directory for code changes, and include results in the handoff or pull request
+- Code coverage can be generated locally with `swift test --enable-code-coverage`
